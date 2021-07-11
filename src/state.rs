@@ -1,5 +1,8 @@
 pub use mobc_redis::{redis, Connection, RedisConnectionManager};
+
 pub type KvPool = mobc::Pool<RedisConnectionManager>;
+
+use wither::mongodb::Database;
 
 #[cfg(any(feature = "mysql"))]
 pub type SqlPool = sqlx::MySqlPool;

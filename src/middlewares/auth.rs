@@ -5,7 +5,7 @@ use std::borrow::Cow;
 
 use crate::api::ApiError;
 use crate::state::AppStateRaw;
-use crate::users::user::Claims;
+use crate::models::user::Claims;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 struct QueryParams {
@@ -72,3 +72,4 @@ impl FromRequest for AuthorizationService {
         }
     }
 }
+

@@ -1,14 +1,5 @@
-// PBKDF2 < bcrypt < scrypt
-fn passhash(name: &str, pass: &str) -> String {
-    let namedpass = format!("{}{}", name, pass);
-    let hash = bcrypt::hash(namedpass.as_bytes(), bcrypt::DEFAULT_COST).unwrap();
-    // info!("{}{}: {}", name, pass, hash);
-    hash
-}
-fn passhash_verify(name: &str, pass: &str, hash: &str) -> bool {
-    let namedpass = format!("{}{}", name, pass);
-    bcrypt::verify(namedpass.as_bytes(), hash).unwrap()
-}
+
+
 
 #[cfg(any(feature = "mysql"))]
 type SqlID = u64;
@@ -45,11 +36,7 @@ pub struct Login {
     pub rememberme: bool,
 }
 
-impl Login {
-    pub fn verify(&self, hash: &str) -> bool {
-        passhash_verify(&self.name, &self.password, hash)
-    }
-}
+
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Claims {
@@ -65,8 +52,5 @@ pub struct Register {
     pub password: String,
 }
 
-impl Register {
-    pub fn passhash(&self) -> String {
-        passhash(&self.name, &self.password)
-    }
-}
+
+

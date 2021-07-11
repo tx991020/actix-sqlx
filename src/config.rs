@@ -1,8 +1,13 @@
 use crate::state::*;
 use crate::state::{redis::Client, KvPool, RedisConnectionManager};
+use nonblock_logger::{
+    log::{LevelFilter, Record},
+    BaseFilter, BaseFormater, FixedLevel, JoinHandle, NonblockLogger,
+};
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use wither::mongodb::Client as MgoClient;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Config {
@@ -10,6 +15,8 @@ pub struct Config {
     pub redis: String,
     pub listen: String,
     pub jwt_priv: String,
+
+
 }
 
 impl Config {
@@ -27,6 +34,12 @@ impl Config {
             RedisConnectionManager::new(Client::open(self.redis.clone()).expect("redis open"));
         let kv = KvPool::builder().build(kvm);
 
+        // let client_options = ClientOptions::parse("mongodb://localhost:27017").unwrap();
+        // let client = MgoClient::with_options(client_options).unwrap();
+        // let mgo = client.database("mydb1");
+        // let mgo = MgoClient::with_uri_str("mongodb://localhost:27017/").await.unwrap().database("mydb1");
+
+
         Arc::new(State {
             config: self,
             sql,
@@ -42,16 +55,15 @@ impl Config {
 
 pub fn version_with_gitif() -> &'static str {
     concat!(
-        env!("CARGO_PKG_VERSION"),
-        " ",
-        env!("VERGEN_COMMIT_DATE"),
-        ": ",
-        env!("VERGEN_SHA_SHORT")
+    env!("CARGO_PKG_VERSION"),
+    " ",
+    env!("VERGEN_COMMIT_DATE"),
+    ": ",
+    env!("VERGEN_SHA_SHORT")
     )
 }
 
 #[derive(structopt::StructOpt, Debug)]
-// #[structopt(name = "template")]
 #[structopt(version = version_with_gitif())]
 pub struct Opt {
     // /// Activate debug mode
@@ -65,10 +77,10 @@ pub struct Opt {
 
     /// Output file
     #[structopt(
-        short = "c",
-        long = "config",
-        parse(from_os_str),
-        default_value = "template.json"
+    short = "c",
+    long = "config",
+    parse(from_os_str),
+    default_value = "template.json"
     )]
     pub config: PathBuf,
 }
@@ -110,10 +122,6 @@ impl Opt {
     }
 }
 
-use nonblock_logger::{
-    log::{LevelFilter, Record},
-    BaseFilter, BaseFormater, FixedLevel, JoinHandle, NonblockLogger,
-};
 
 pub fn format(base: &BaseFormater, record: &Record) -> String {
     let level = FixedLevel::with_color(record.level(), base.color_get())
@@ -126,7 +134,6 @@ pub fn format(base: &BaseFormater, record: &Record) -> String {
         chrono::Local::now().format("%Y-%m-%d %H:%M:%S.%3f"),
         level,
         record.module_path().unwrap_or("*"),
-        // record.file().unwrap_or("*"),
         record.line().unwrap_or(0),
         nonblock_logger::current_thread_name(),
         record.args()

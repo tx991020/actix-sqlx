@@ -1,5 +1,6 @@
-use super::dao::IUser;
-use super::user::{Claims, Login, Register};
+
+use crate::models::user::{Claims, Login, Register};
+use crate::dao::user::IUser;
 use crate::api::ApiResult;
 use crate::middlewares::auth::AuthorizationService;
 use crate::state::AppState;
@@ -7,10 +8,9 @@ use crate::state::AppState;
 use actix_web::{get, post, web, HttpRequest, Responder};
 
 // curl -v --data '{"name": "Bob", "email": "Bob@google.com", "password": "Bobpass"}' -H "Content-Type: application/json" -X POST localhost:8080/user/register
-#[post("/register")]
+#[post("/user/register")]
 async fn register(form: web::Json<Register>, state: AppState) -> impl Responder {
     let form = form.into_inner();
-
     match state.user_add(&form).await {
         Ok(res) => {
             info!("register {:?} res: {}", form, res);
@@ -24,7 +24,7 @@ async fn register(form: web::Json<Register>, state: AppState) -> impl Responder 
 }
 
 // curl -v --data '{"name": "Bob", "email": "Bob@google.com", "password": "Bobpass"}' -H "Content-Type: application/json" -X POST localhost:8080/user/login
-#[post("/login")]
+#[post("/user/login")]
 async fn login(form: web::Json<Login>, state: AppState) -> impl Responder {
     let form = form.into_inner();
 
@@ -38,10 +38,10 @@ async fn login(form: web::Json<Login>, state: AppState) -> impl Responder {
             if form.verify(&user.pass) {
                 let exp: DateTime<Utc> = Utc::now()
                     + if form.rememberme {
-                        Duration::days(30)
-                    } else {
-                        Duration::hours(1)
-                    };
+                    Duration::days(30)
+                } else {
+                    Duration::hours(1)
+                };
 
                 let my_claims = Claims {
                     sub: user.name,
@@ -53,7 +53,7 @@ async fn login(form: web::Json<Login>, state: AppState) -> impl Responder {
                     &my_claims,
                     &EncodingKey::from_secret(key),
                 )
-                .unwrap();
+                    .unwrap();
 
                 ApiResult::new().with_msg("ok").with_data(token)
             } else {
@@ -69,7 +69,7 @@ async fn login(form: web::Json<Login>, state: AppState) -> impl Responder {
 
 // curl -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJCb2IiLCJleHAiOjE1OTEyNDYwOTR9.O1dbYu3tqiIi6I8OUlixLuj9dp-1tLl4mjmXZ0ve6uo' localhost:8080/user/userInfo |jq .
 // curl 'localhost:8080/user/userInfo?access_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJCb2IiLCJleHAiOjE1OTEyNTYxNDd9.zJKlZOozYfq-xMXO89kjUyme6SA8_eziacqt5gvXj2U' |jq .
-#[get("/userInfo")]
+#[get("/user/userInfo")]
 async fn user_informations(
     _req: HttpRequest,
     auth: AuthorizationService,
